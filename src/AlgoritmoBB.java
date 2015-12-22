@@ -1,95 +1,99 @@
 import java.util.ArrayList;
+import java.util.HashSet;
 
 /**
- * 
- * Clase que implementa el algoritmo Branch and Bound
- * 
- * @author Jonathan Expósito Martín y Sergio Rodríguez Martín
- *
+ * Solves the traveling salesman problem using Branch and Bound by utilizing Node's
  */
 public class AlgoritmoBB {
 	Matriz distances;
-	int sourceCity;
-	String result = new String();
+	double best_cost;
+	ArrayList<Integer> best_path;
 
-	ArrayList<Integer> initialRoute, optimumRoute;
-	int nodes = 0;
-	double routeCost = 0.0;
-	double optimumCost = Double.MAX_VALUE;
-
-	/** Creates a new instance of BranchAndBound */
-	public AlgoritmoBB(Matriz matrix, int sourceCity) {
-
-		distances = matrix;
-		this.sourceCity = sourceCity;
+	/**
+	 * Constructs a new Solver and initializes distances array
+	 *
+	 * @param cities An ArrayList of City's
+	 */
+	public AlgoritmoBB(Matriz distances) {
+		this.distances = distances;
 	}
 
 	/**
-	 * executes the algorithm
+	 * Calculates the shortest (non-repeating) path between a series of nodes
+	 *
+	 * @return An array with the locations of the best path
 	 */
-	public String execute() {
+	public ArrayList<Integer> calculate() {
+		HashSet<Integer> location_set = new HashSet<Integer>(distances.getTam());
+		for(int i = 0; i < distances.getTam(); i++)
+			location_set.add(i);
 
-		initialRoute = new ArrayList<Integer>();
-		initialRoute.add(sourceCity);
-		optimumRoute = new ArrayList<Integer>();
-		nodes++;
+		best_cost = findGreedyCost(0, location_set, distances);
 
-		result = "BRANCH AND BOUND SEARCH\n\n";
+		ArrayList<Integer> active_set = new ArrayList<Integer>(distances.getTam());
+		for(int i = 0; i < distances.getTam(); i++)
+			active_set.add(i);
 
-		long startTime = System.currentTimeMillis();
-		search(sourceCity, initialRoute);
-		long endTime = System.currentTimeMillis();
+		Nodo root = new Nodo(null, 0, distances, active_set, 0);
+		traverse(root);
 
-		result += "\nBetter solution: " + optimumRoute.toString() + "// Cost: "
-				+ optimumCost + "\n";
-		result += "Visited Nodes: " + nodes + "\n";
-		result += "Elapsed Time: " + (endTime - startTime) + " ms\n";
-
-		return result;
+		return best_path;
 	}
 
 	/**
-	 * @param from
-	 *            node where we start the search.
-	 * @param route
-	 *            followed route for arriving to node "from".
+	 * Get current path cost
+	 *
+	 * @return The cost
 	 */
-	public void search(int from, ArrayList<Integer> followedRoute) {
-		System.out.println(optimumCost);
-		// we've found a new solution
-		if (followedRoute.size() == distances.getTam()) {
-			followedRoute.add(sourceCity);
-			nodes++;
+	public double getCost() {
+		return best_cost;
+	}
 
-			// update the route's cost
-			routeCost += distances.getMatriz()[from][sourceCity];
+	/**
+	 * Find the greedy cost for a set of locations
+	 *
+	 * @param i The current location
+	 * @param location_set Set of all remaining locations
+	 * @param distances The 2D array containing point distances
+	 * @return The greedy cost
+	 */
+	private double findGreedyCost(int i, HashSet<Integer> location_set, Matriz distances) {
+		if(location_set.isEmpty())
+			return distances.getElem(0, i);
 
-			if (routeCost < optimumCost) {
-				optimumCost = routeCost;
-				optimumRoute = new ArrayList<Integer>(followedRoute);
+		location_set.remove(i);
+
+		double lowest = Double.MAX_VALUE;
+		int closest = 0;
+		for(int location : location_set) {
+			double cost = distances.getElem(i, location);
+			if(cost < lowest) {
+				lowest = cost;
+				closest = location;
 			}
+		}
 
-			result += followedRoute.toString() + "// Cost: " + routeCost + "\n";
+		return lowest + findGreedyCost(closest, location_set, distances);
+	}
 
-			// update the route's cost (back to the previous value)
-			routeCost -= distances.getMatriz()[from][sourceCity];
-		} else {
-			for (int to = 0; to < distances.getTam(); to++) {
-				if (!followedRoute.contains(to)) {
+	/**
+	 * Recursive method to go through the tree finding and pruning paths
+	 *
+	 * @param parent The root/parent node
+	 */
+	private void traverse(Nodo parent) {
+		Nodo[] children = parent.generateChildren();
 
-					// update the route's cost
-					routeCost += distances.getMatriz()[from][to];
-
-					if (routeCost < optimumCost) {
-						ArrayList<Integer> increasedRoute = new ArrayList<Integer>(followedRoute);
-						increasedRoute.add(to);
-						nodes++;
-						search(to, increasedRoute);
-					}
-
-					// update the route's cost (back to the previous value)
-					routeCost -= distances.getMatriz()[from][to];
+		for(Nodo child : children) {
+			if(child.isTerminal()) {
+				double cost = child.getPathCost();
+				if(cost < best_cost) {
+					best_cost = cost;
+					best_path = child.getPath();
 				}
+			}
+			else if(child.getLowerBound() <= best_cost) {
+				traverse(child);
 			}
 		}
 	}

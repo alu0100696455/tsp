@@ -28,21 +28,26 @@ public class AlgoritmoTour {
 	 * 2OPT
 	 */
 	public void computoCotaSuperior() {
+		System.out.println("---------------------------");
 		algoritmoNN();
 		setCotaSuperior();
+		System.out.println("Tour NN:\t" + getMejorTour().getVertices());
 		System.out.println("---------------------------");
-		System.out.println("Tour NN: " + getMejorTour().getVertices());
-		System.out.println("---------------------------");
+		
 		algoritmo2OPT();
 		setCotaSuperior();
-		System.out.println("Tour 2OPT: " + getMejorTour().getVertices());
+		System.out.println("Tour 2OPT:\t" + getMejorTour().getVertices());
 		System.out.println("---------------------------");
+		
+		algoritmoBB();
+		setCotaSuperior();
+		System.out.println("Tour BB:\t" + getMejorTour().getVertices());
+		System.out.println("---------------------------");
+		
 		System.out.println("Cota superior: " + getCotaSuperior());
 		System.out.println("---------------------------");
-		AlgoritmoBB bbbb = new AlgoritmoBB(getMat(), 0);
-		System.out.println(bbbb.execute());
 	}
-
+	
 	/**
 	 * Método que soluciona el algoritmo NN para la matriz de costos dada
 	 */
@@ -176,6 +181,13 @@ public class AlgoritmoTour {
 		}
 
 	}
+	
+	/**
+	 * Método que soluciona el algoritmo BB para la matriz de costos dada
+	 */
+	public void algoritmoBB() {
+		getMejorTour().setVertices(new AlgoritmoBB(getMat()).calculate());
+	}
 
 	// Herramientas para los algoritmos
 
@@ -211,7 +223,7 @@ public class AlgoritmoTour {
 		}
 		return indiceOrigen + 1;
 	}
-
+	
 	public String toString() {
 		return matriz.toString();
 	}
