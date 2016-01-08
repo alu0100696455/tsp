@@ -9,10 +9,10 @@ import java.util.ArrayList;
  */
 public class MejorTour {
 	private ArrayList<Integer> vertices;
-	
+
 	public MejorTour(int size) {
 		setVertices(new ArrayList<Integer>());
-		for(int i = 0; i < size; i++)
+		for (int i = 0; i < size; i++)
 			getVertices().add(0);
 	}
 

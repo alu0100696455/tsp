@@ -1,144 +1,142 @@
 import java.util.ArrayList;
 
 /**
- * A single node in the tree of paths
+ * Clase que representa un nodo
+ * 
+ * @author Jonathan Expósito Martín y Sergio Rodríguez Martín
  */
 public class Nodo {
-	public Nodo parent;
-	private double parent_cost;
+	public Nodo padre;
+	private double costePadre;
 
 	private Matriz costos;
-	private ArrayList<Integer> active_set;
+	private ArrayList<Integer> conjunto;
 
-	public int index;
+	public int indice;
 
 	/**
-	 * Constructs a new Node
-	 *
-	 * @param parent This node's parent
-	 * @param parent_cost The cost between these nodes
-	 * @param distances The 2D array of distance between locations
-	 * @param active_set The set of all points (including this node) that are being calculated
-	 * @param index The location index of this node
+	 * @param padre
+	 *            El padre de este nodo
+	 * @param costePadre
+	 *            El coste entre el nodo padre y este
+	 * @param distancias
+	 *            El array de distancias entre nodos
+	 * @param conjunto
+	 *            El conjunto de nodos que están siendo calculados
+	 * @param indice
+	 *            El índice del nodo a crear
 	 */
-	public Nodo(Nodo parent, double parent_cost, Matriz distances, ArrayList<Integer> active_set, int index) {
-		this.parent = parent;
-		this.parent_cost = parent_cost;
-		this.costos = distances;
-		this.active_set = active_set;
-		this.index = index;
+	public Nodo(Nodo padre, double costePadre, Matriz distancias,
+			ArrayList<Integer> conjunto, int indice) {
+		this.padre = padre;
+		this.costePadre = costePadre;
+		this.costos = distancias;
+		this.conjunto = conjunto;
+		this.indice = indice;
 	}
 
 	/**
-	 * Check if this node is terminal
-	 *
-	 * @return Whether or not the node is terminal
+	 * Comprueba si el nodo es o no final
 	 */
-	public boolean isTerminal() {
-		return active_set.size() == 1;
+	public boolean isFinal() {
+		return conjunto.size() == 1;
 	}
 
 	/**
-	 * Generate and return this node's children
-	 *
-	 * @precondition Node is not terminal
-	 * @return Array of children
+	 * Genera y devuelve el nodo hijo
 	 */
-	public Nodo[] generateChildren() {
-		Nodo[] children = new Nodo[active_set.size() - 1];
-		ArrayList<Integer> new_set = new ArrayList<Integer>(active_set.size() - 1);
-		for(int location : active_set) {
-			if(location == index)
+	public Nodo[] generarHijo() {
+		Nodo[] hijo = new Nodo[conjunto.size() - 1];
+		ArrayList<Integer> nuevoConjunto = new ArrayList<Integer>(
+				conjunto.size() - 1);
+		for (int posicion : conjunto) {
+			if (posicion == indice)
 				continue;
 
-			new_set.add(location);
+			nuevoConjunto.add(posicion);
 		}
 
-		for(int j = 0; j < children.length; j++)
-			children[j] = new Nodo(this, costos.getElem(index, new_set.get(j)), costos, new_set, new_set.get(j));
+		for (int j = 0; j < hijo.length; j++)
+			hijo[j] = new Nodo(this, costos.getElem(indice,
+					nuevoConjunto.get(j)), costos, nuevoConjunto,
+					nuevoConjunto.get(j));
 
-		return children;
+		return hijo;
 	}
 
 	/**
-	 * Get the path array up to this point
-	 *
-	 * @return The path
+	 * Método que obtiene la trayectoria hasta este punto
 	 */
-	public ArrayList<Integer> getPath() {
-		int depth = costos.getTam() - active_set.size() + 1;
-		ArrayList<Integer> path = new ArrayList<Integer>(depth);
-		for(int i = 0; i < depth; i++)
-			path.add(0);
-		getPathIndex(path, depth - 1);
-		return path;
+	public ArrayList<Integer> getTour() {
+		int tam = costos.getTam() - conjunto.size() + 1;
+		ArrayList<Integer> tour = new ArrayList<Integer>(tam);
+		for (int i = 0; i < tam; i++)
+			tour.add(0);
+		getIndiceTour(tour, tam - 1);
+		return tour;
 	}
 
 	/**
-	 * Recursive method to fill in a path array from this point
+	 * Método recursivo para completar el array de tour
 	 *
-	 * @param path The path array
-	 * @param i The index of this node
+	 * @param tour
+	 *            El array que representa la tour
+	 * @param ind
+	 *            El índice de este nodo
 	 */
-	public void getPathIndex(ArrayList<Integer> path, int i) {
-		path.set(i, index);
-		if(parent != null)
-			parent.getPathIndex(path, i - 1);
+	public void getIndiceTour(ArrayList<Integer> tour, int ind) {
+		tour.set(ind, indice);
+		if (padre != null)
+			padre.getIndiceTour(tour, ind - 1);
 	}
 
 	/**
-	 * Get the lower bound cost of this node
-	 *
-	 * @return Lower bound cost
+	 * Método que obtiene el costo límite inferior de este nodo
 	 */
-	public double getLowerBound() {
-		double value = 0;
+	public double getLimiteInferior() {
+		double valor = 0;
 
-		if(active_set.size() == 2)
-			return getPathCost() + costos.getElem(active_set.get(0), active_set.get(1));
+		if (conjunto.size() == 2)
+			return getCostoTour()
+					+ costos.getElem(conjunto.get(0), conjunto.get(1));
 
-		for(int location : active_set) {
-			double low1 = Double.MAX_VALUE;
-			double low2 = Double.MAX_VALUE;
+		for (int posicion : conjunto) {
+			double inf1 = Double.MAX_VALUE;
+			double inf2 = Double.MAX_VALUE;
 
-			for(int other: active_set) {
-				if(other == location)
+			for (int otro : conjunto) {
+				if (otro == posicion)
 					continue;
 
-				double cost = costos.getElem(location, other);
-				if(cost < low1) {
-					low2 = low1;
-					low1 = cost;
-				}
-				else if(cost < low2) {
-					low2 = cost;
+				double cost = costos.getElem(posicion, otro);
+				if (cost < inf1) {
+					inf2 = inf1;
+					inf1 = cost;
+				} else if (cost < inf2) {
+					inf2 = cost;
 				}
 			}
 
-			value += low1 + low2;
+			valor += inf1 + inf2;
 		}
 
-		return getParentCost() + value / 2;
+		return getCostoPadre() + valor / 2;
 	}
 
 	/**
-	 * Get the cost of the entire path up to this point
-	 *
-	 * @return Cost of path including return
+	 * Método que devuelve el costo entero del tour
 	 */
-	public double getPathCost() {
-		return costos.getElem(0, index) + getParentCost();
+	public double getCostoTour() {
+		return costos.getElem(0, indice) + getCostoPadre();
 	}
 
 	/**
-	 * Get the cost up to the parent at this point
-	 *
-	 * @return Cost of path
+	 * Método que devuelve el costo hasta el nodo padre en este punto
 	 */
-	public double getParentCost() {
-		if(parent == null)
+	public double getCostoPadre() {
+		if (padre == null)
 			return 0;
 
-		return parent_cost + parent.getParentCost();
+		return costePadre + padre.getCostoPadre();
 	}
 }

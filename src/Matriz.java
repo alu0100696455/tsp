@@ -13,7 +13,7 @@ public class Matriz {
 		setTam(tam);
 		setMatriz(new double[getTam()][getTam()]);
 	}
-	
+
 	public String toString() {
 		String resultado = "";
 		for (int i = 0; i < getTam(); i++) {
@@ -42,11 +42,11 @@ public class Matriz {
 	public void setMatriz(double[][] matriz) {
 		this.matriz = matriz;
 	}
-	
+
 	public double getElem(int i, int j) {
 		return getMatriz()[i][j];
 	}
-	
+
 	public void setElem(double valor, int i, int j) {
 		getMatriz()[i][j] = valor;
 	}

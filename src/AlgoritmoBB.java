@@ -2,98 +2,96 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 /**
- * Solves the traveling salesman problem using Branch and Bound by utilizing Node's
+ * Clase que implementa el algoritmo BB
+ * 
+ * @author Jonathan Expósito Martín y Sergio Rodríguez Martín
+ *
  */
 public class AlgoritmoBB {
-	Matriz distances;
-	double best_cost;
-	ArrayList<Integer> best_path;
+	Matriz distancias;
+	double mejorCosto;
+	ArrayList<Integer> mejorTour;
 
-	/**
-	 * Constructs a new Solver and initializes distances array
-	 *
-	 * @param cities An ArrayList of City's
-	 */
-	public AlgoritmoBB(Matriz distances) {
-		this.distances = distances;
+	public AlgoritmoBB(Matriz distancias) {
+		this.distancias = distancias;
 	}
 
 	/**
-	 * Calculates the shortest (non-repeating) path between a series of nodes
-	 *
-	 * @return An array with the locations of the best path
+	 * Calcula el tour más corto entre una serie de nodos
 	 */
-	public ArrayList<Integer> calculate() {
-		HashSet<Integer> location_set = new HashSet<Integer>(distances.getTam());
-		for(int i = 0; i < distances.getTam(); i++)
-			location_set.add(i);
+	public ArrayList<Integer> calcular() {
+		HashSet<Integer> conjuntoPosicion = new HashSet<Integer>(
+				distancias.getTam());
+		for (int i = 0; i < distancias.getTam(); i++)
+			conjuntoPosicion.add(i);
 
-		best_cost = findGreedyCost(0, location_set, distances);
+		mejorCosto = buscarCostoVoraz(0, conjuntoPosicion, distancias);
 
-		ArrayList<Integer> active_set = new ArrayList<Integer>(distances.getTam());
-		for(int i = 0; i < distances.getTam(); i++)
-			active_set.add(i);
+		ArrayList<Integer> conjunto = new ArrayList<Integer>(
+				distancias.getTam());
+		for (int i = 0; i < distancias.getTam(); i++)
+			conjunto.add(i);
 
-		Nodo root = new Nodo(null, 0, distances, active_set, 0);
-		traverse(root);
+		Nodo raiz = new Nodo(null, 0, distancias, conjunto, 0);
+		atravesar(raiz);
 
-		return best_path;
+		return mejorTour;
 	}
 
 	/**
-	 * Get current path cost
-	 *
-	 * @return The cost
+	 * Método para obtener el costo actual
 	 */
 	public double getCost() {
-		return best_cost;
+		return mejorCosto;
 	}
 
 	/**
-	 * Find the greedy cost for a set of locations
+	 * Método que busca el costo voraz de un conjunto de posiciones
 	 *
-	 * @param i The current location
-	 * @param location_set Set of all remaining locations
-	 * @param distances The 2D array containing point distances
-	 * @return The greedy cost
+	 * @param i
+	 *            Posición actual
+	 * @param conjuntoPosicion
+	 *            Conjunto de las posiciones restantes
+	 * @param distancias
+	 *            Matriz que contiene las distancias de los puntos
+	 * @return El costo voraz
 	 */
-	private double findGreedyCost(int i, HashSet<Integer> location_set, Matriz distances) {
-		if(location_set.isEmpty())
-			return distances.getElem(0, i);
+	private double buscarCostoVoraz(int i, HashSet<Integer> conjuntoPosicion,
+			Matriz distancias) {
+		if (conjuntoPosicion.isEmpty())
+			return distancias.getElem(0, i);
 
-		location_set.remove(i);
+		conjuntoPosicion.remove(i);
 
-		double lowest = Double.MAX_VALUE;
-		int closest = 0;
-		for(int location : location_set) {
-			double cost = distances.getElem(i, location);
-			if(cost < lowest) {
-				lowest = cost;
-				closest = location;
+		double menor = Double.MAX_VALUE;
+		int cercano = 0;
+		for (int posicion : conjuntoPosicion) {
+			double costo = distancias.getElem(i, posicion);
+			if (costo < menor) {
+				menor = costo;
+				cercano = posicion;
 			}
 		}
 
-		return lowest + findGreedyCost(closest, location_set, distances);
+		return menor + buscarCostoVoraz(cercano, conjuntoPosicion, distancias);
 	}
 
 	/**
-	 * Recursive method to go through the tree finding and pruning paths
-	 *
-	 * @param parent The root/parent node
+	 * Método recursivo para ir a través del arbol buscando y podando
+	 * trayectorias
 	 */
-	private void traverse(Nodo parent) {
-		Nodo[] children = parent.generateChildren();
+	private void atravesar(Nodo padre) {
+		Nodo[] hijos = padre.generarHijo();
 
-		for(Nodo child : children) {
-			if(child.isTerminal()) {
-				double cost = child.getPathCost();
-				if(cost < best_cost) {
-					best_cost = cost;
-					best_path = child.getPath();
+		for (Nodo hijo : hijos) {
+			if (hijo.isFinal()) {
+				double costo = hijo.getCostoTour();
+				if (costo < mejorCosto) {
+					mejorCosto = costo;
+					mejorTour = hijo.getTour();
 				}
-			}
-			else if(child.getLowerBound() <= best_cost) {
-				traverse(child);
+			} else if (hijo.getLimiteInferior() <= mejorCosto) {
+				atravesar(hijo);
 			}
 		}
 	}

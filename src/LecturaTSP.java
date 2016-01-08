@@ -8,7 +8,8 @@ import org.w3c.dom.Element;
 
 /**
  * 
- * Clase que contiene los datos de entrada para el problema TSP. La entrada debe darse en formato XML
+ * Clase que contiene los datos de entrada para el problema TSP. La entrada debe
+ * darse en formato XML
  * 
  * @author Jonathan Expósito Martín y Sergio Rodríguez Martín
  *
@@ -55,7 +56,7 @@ public class LecturaTSP {
 		}
 
 	}
-	
+
 	/*
 	 * Getters & Setters
 	 */
